@@ -876,3 +876,37 @@ gst_v4l2_is_video_dec (GstCaps * sink_caps, GstCaps * src_caps)
 
   return ret;
 }
+
+gboolean
+gst_v4l2_video_dec_register (GstPlugin * plugin, const gchar * basename,
+    const gchar * device_path, GstCaps * sink_caps, GstCaps * src_caps)
+{
+  GTypeQuery type_query;
+  GTypeInfo type_info = { 0, };
+  GType type, subtype;
+  gchar *type_name;
+  GstV4l2VideoCData *cdata;
+
+  cdata = g_new0 (GstV4l2VideoCData, 1);
+  cdata->device = g_strdup (device_path);
+  cdata->sink_caps = gst_caps_ref (sink_caps);
+  cdata->src_caps = gst_caps_ref (src_caps);
+
+  type = gst_v4l2_video_dec_get_type ();
+  g_type_query (type, &type_query);
+  memset (&type_info, 0, sizeof (type_info));
+  type_info.class_size = type_query.class_size;
+  type_info.instance_size = type_query.instance_size;
+  type_info.class_init = gst_v4l2_video_dec_subclass_init;
+  type_info.class_data = cdata;
+  type_info.instance_init = gst_v4l2_video_dec_subinstance_init;
+
+  type_name = g_strdup_printf ("v4l2%sdec", basename);
+  subtype = g_type_register_static (type, type_name, &type_info, 0);
+
+  gst_element_register (plugin, type_name, GST_RANK_PRIMARY + 1, subtype);
+
+  g_free (type_name);
+
+  return TRUE;
+}
