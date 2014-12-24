@@ -48,32 +48,6 @@ enum
 G_DEFINE_ABSTRACT_TYPE (GstV4l2H264Enc, gst_v4l2_h264_enc,
     GST_TYPE_V4L2_VIDEO_ENC);
 
-static void
-gst_v4l2_h264_enc_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec)
-{
-  GstV4l2H264Enc *self = GST_V4L2_H264_ENC (object);
-
-  switch (prop_id) {
-      /* By default, only set on output */
-    default:
-      break;
-  }
-}
-
-static void
-gst_v4l2_h264_enc_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec)
-{
-  GstV4l2H264Enc *self = GST_V4L2_H264_ENC (object);
-
-  switch (prop_id) {
-      /* By default read from output */
-    default:
-      break;
-  }
-}
-
 static GstFlowReturn
 gst_v4l2_h264_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
@@ -127,15 +101,8 @@ gst_v4l2_h264_enc_class_init (GstV4l2H264EncClass * klass)
       "Codec/Encoder/Video",
       "Encode H.264 video streams via V4L2 API", "ayaka <ayaka@soulik.info>");
 
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_v4l2_h264_enc_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_v4l2_h264_enc_get_property);
   /* FIXME propose_allocation or not ? */
   baseclass->handle_frame = GST_DEBUG_FUNCPTR (gst_v4l2_h264_enc_handle_frame);
-
-  gst_v4l2_object_install_m2m_properties_helper (gobject_class);
-
 }
 
 /* Probing functions */
