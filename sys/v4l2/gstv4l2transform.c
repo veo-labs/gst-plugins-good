@@ -58,8 +58,7 @@ typedef struct
 } GstV4l2TransformCData;
 
 #define gst_v4l2_transform_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstV4l2Transform, gst_v4l2_transform,
-    GST_TYPE_BASE_TRANSFORM);
+G_DEFINE_TYPE (GstV4l2Transform, gst_v4l2_transform, GST_TYPE_BASE_TRANSFORM);
 
 static void
 gst_v4l2_transform_set_property (GObject * object,
@@ -614,7 +613,19 @@ gst_v4l2_transform_finalize (GObject * object)
 static void
 gst_v4l2_transform_init (GstV4l2Transform * self)
 {
-  /* V4L2 object are created in subinstance_init */
+
+  self->v4l2output = gst_v4l2_object_new (GST_ELEMENT (self),
+      V4L2_BUF_TYPE_VIDEO_OUTPUT, DEFAULT_PROP_DEVICE,
+      gst_v4l2_get_output, gst_v4l2_set_output, NULL);
+  self->v4l2output->no_initial_format = TRUE;
+  self->v4l2output->keep_aspect = FALSE;
+
+  self->v4l2capture = gst_v4l2_object_new (GST_ELEMENT (self),
+      V4L2_BUF_TYPE_VIDEO_CAPTURE, DEFAULT_PROP_DEVICE,
+      gst_v4l2_get_input, gst_v4l2_set_input, NULL);
+  self->v4l2capture->no_initial_format = TRUE;
+  self->v4l2output->keep_aspect = FALSE;
+
   /* enable QoS */
   gst_base_transform_set_qos_enabled (GST_BASE_TRANSFORM (self), TRUE);
 }
@@ -625,17 +636,11 @@ gst_v4l2_transform_subinstance_init (GTypeInstance * instance, gpointer g_class)
   GstV4l2TransformClass *klass = GST_V4L2_TRANSFORM_CLASS (g_class);
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (instance);
 
-  self->v4l2output = gst_v4l2_object_new (GST_ELEMENT (self),
-      V4L2_BUF_TYPE_VIDEO_OUTPUT, klass->default_device,
-      gst_v4l2_get_output, gst_v4l2_set_output, NULL);
-  self->v4l2output->no_initial_format = TRUE;
-  self->v4l2output->keep_aspect = FALSE;
+  g_free (self->v4l2output->videodev);
+  self->v4l2output->videodev = g_strdup (klass->default_device);
 
-  self->v4l2capture = gst_v4l2_object_new (GST_ELEMENT (self),
-      V4L2_BUF_TYPE_VIDEO_CAPTURE, klass->default_device,
-      gst_v4l2_get_input, gst_v4l2_set_input, NULL);
-  self->v4l2capture->no_initial_format = TRUE;
-  self->v4l2output->keep_aspect = FALSE;
+  g_free (self->v4l2capture->videodev);
+  self->v4l2capture->videodev = g_strdup (klass->default_device);
 }
 
 static void
@@ -657,6 +662,13 @@ gst_v4l2_transform_class_init (GstV4l2TransformClass * klass)
       "Filter/Converter/Video",
       "Transform streams via V4L2 API",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          gst_v4l2_object_get_all_caps ()));
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          gst_v4l2_object_get_all_caps ()));
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_v4l2_transform_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_v4l2_transform_finalize);
@@ -697,6 +709,7 @@ gst_v4l2_transform_subclass_init (gpointer g_class, gpointer data)
 {
   GstV4l2TransformClass *klass = GST_V4L2_TRANSFORM_CLASS (g_class);
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
   GstV4l2TransformCData *cdata = data;
 
   klass->default_device = cdata->device;
@@ -708,6 +721,14 @@ gst_v4l2_transform_subclass_init (gpointer g_class, gpointer data)
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
           cdata->src_caps));
+
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_v4l2_transform_set_property);
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_v4l2_transform_get_property);
+
+  gst_v4l2_object_install_m2m_subclass_properties_helper ((GObjectClass *)
+      klass);
 
   g_free (cdata);
 }

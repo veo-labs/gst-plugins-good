@@ -213,6 +213,7 @@ void         gst_v4l2_object_install_properties_helper (GObjectClass * gobject_c
                                                         const char * default_device);
 
 void         gst_v4l2_object_install_m2m_properties_helper (GObjectClass * gobject_class);
+void         gst_v4l2_object_install_m2m_subclass_properties_helper (GObjectClass * gobject_class);
 
 gboolean     gst_v4l2_object_set_property_helper       (GstV4l2Object * v4l2object,
                                                         guint prop_id,
