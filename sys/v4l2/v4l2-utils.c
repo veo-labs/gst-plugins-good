@@ -188,23 +188,14 @@ static const struct v4l2_elements elements[] = {
 static void
 gst_v4l2_encoder_subinstance_init (GTypeInstance * instance, gpointer g_class)
 {
+  GstV4l2VideoEncClass *klass = GST_V4L2_VIDEO_ENC_CLASS (g_class);
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (instance);
 
-  self->v4l2output =
-      gst_v4l2_object_new (GST_ELEMENT (self),
-      V4L2_BUF_TYPE_VIDEO_OUTPUT,
-      GST_V4L2_VIDEO_ENC_CLASS (g_class)->default_device, gst_v4l2_get_output,
-      gst_v4l2_set_output, NULL);
-  self->v4l2output->no_initial_format = TRUE;
-  self->v4l2output->keep_aspect = FALSE;
+  g_free (self->v4l2output->videodev);
+  self->v4l2output->videodev = g_strdup (klass->default_device);
 
-  self->v4l2capture =
-      gst_v4l2_object_new (GST_ELEMENT (self),
-      V4L2_BUF_TYPE_VIDEO_CAPTURE,
-      GST_V4L2_VIDEO_ENC_CLASS (g_class)->default_device, gst_v4l2_get_input,
-      gst_v4l2_set_input, NULL);
-  self->v4l2capture->no_initial_format = TRUE;
-  self->v4l2capture->keep_aspect = FALSE;
+  g_free (self->v4l2capture->videodev);
+  self->v4l2capture->videodev = g_strdup (klass->default_device);
 }
 
 
@@ -212,6 +203,7 @@ static void
 gst_v4l2_encoder_subclass_init (gpointer g_class, gpointer data)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = (GObjectClass *) g_class;
   GstV4l2VideoCData *cdata = data;
 
   GST_V4L2_VIDEO_ENC_CLASS (g_class)->default_device = cdata->device;
@@ -223,6 +215,13 @@ gst_v4l2_encoder_subclass_init (gpointer g_class, gpointer data)
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src",
           GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps));
+ 
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_set_property);
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_get_property);
+
+  gst_v4l2_object_install_m2m_subclass_properties_helper (gobject_class);
 
   g_free (cdata);
 }
