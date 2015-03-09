@@ -44,6 +44,7 @@
 #include "gstv4l2radio.h"
 #include "gstv4l2deviceprovider.h"
 #include "gstv4l2transform.h"
+#include "gstv4l2videodec.h"
 
 /* used in v4l2_calls.c and v4l2src_calls.c */
 GST_DEBUG_CATEGORY (v4l2_debug);

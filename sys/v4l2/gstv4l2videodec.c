@@ -58,7 +58,7 @@ enum
 #define gst_v4l2_video_dec_parent_class parent_class
 G_DEFINE_TYPE (GstV4l2VideoDec, gst_v4l2_video_dec, GST_TYPE_VIDEO_DECODER);
 
-static void
+void
 gst_v4l2_video_dec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
@@ -84,7 +84,7 @@ gst_v4l2_video_dec_set_property (GObject * object,
   }
 }
 
-static void
+void
 gst_v4l2_video_dec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
@@ -833,35 +833,6 @@ gst_v4l2_video_dec_class_init (GstV4l2VideoDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_change_state);
 
   gst_v4l2_object_install_m2m_properties_helper (gobject_class);
-}
-
-static void
-gst_v4l2_video_dec_subclass_init (gpointer g_class, gpointer data)
-{
-  GstV4l2VideoDecClass *klass = GST_V4L2_VIDEO_DEC_CLASS (g_class);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstV4l2VideoCData *cdata = data;
-
-  klass->default_device = cdata->device;
-
-  /* Note: gst_pad_template_new() take the floating ref from the caps */
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
-
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_v4l2_video_dec_get_property);
-
-  gst_v4l2_object_install_m2m_subclass_properties_helper ((GObjectClass *)
-      klass);
-
-  g_free (cdata);
 }
 
 /* Probing functions */
