@@ -80,5 +80,13 @@ GType gst_v4l2_video_enc_get_type (void);
 
 gboolean gst_v4l2_is_video_enc (GstCaps * sink_caps, GstCaps * src_caps);
 
+void
+gst_v4l2_video_enc_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+
+void
+gst_v4l2_video_enc_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+
 G_END_DECLS
 #endif /* __GST_V4L2_VIDEO_ENC_H__ */

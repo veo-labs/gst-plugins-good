@@ -45,16 +45,13 @@ enum
 };
 
 #define gst_v4l2_h264_enc_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstV4l2H264Enc, gst_v4l2_h264_enc,
-    GST_TYPE_V4L2_VIDEO_ENC);
+G_DEFINE_TYPE (GstV4l2H264Enc, gst_v4l2_h264_enc, GST_TYPE_V4L2_VIDEO_ENC);
 
 static GstFlowReturn
 gst_v4l2_h264_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
 {
-  GstV4l2H264Enc *self = GST_V4L2_H264_ENC (encoder);
   GstV4l2VideoEnc *parent = GST_V4L2_VIDEO_ENC (encoder);
-  GstFlowReturn ret = GST_FLOW_OK;
   GstStructure *structure;
   GstCaps *outcaps;
 
