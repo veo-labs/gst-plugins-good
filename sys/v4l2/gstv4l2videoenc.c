@@ -237,7 +237,6 @@ gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
 {
   gboolean ret = TRUE;
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
-  GstStructure *structure;
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
@@ -440,7 +439,6 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstStructure *structure;
 
   GST_DEBUG_OBJECT (self, "Handling frame %d", frame->system_frame_number);
 
@@ -586,6 +584,27 @@ gst_v4l2_video_enc_decide_allocation (GstVideoEncoder *
         (parent_class)->decide_allocation (encoder, query);
   latency = self->v4l2capture->min_buffers * self->v4l2capture->duration;
   gst_video_encoder_set_latency (encoder, latency, latency);
+  return ret;
+}
+
+static gboolean
+gst_v4l2_video_enc_propose_allocation (GstVideoEncoder *
+    encoder, GstQuery * query)
+{
+  GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
+  gboolean ret = FALSE;
+
+  GST_DEBUG_OBJECT (self, "called");
+
+  if (query == NULL)
+    ret = TRUE;
+  else
+    ret = gst_v4l2_object_propose_allocation (self->v4l2output, query);
+
+  if (ret)
+    ret = GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
+        query);
+
   return ret;
 }
 
@@ -799,13 +818,16 @@ gst_v4l2_video_enc_class_init (GstV4l2VideoEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_negotiate);
   video_encoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_decide_allocation);
+  video_encoder_class->propose_allocation =
+       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_propose_allocation);
   video_encoder_class->sink_query =
       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_sink_query);
   video_encoder_class->src_query =
       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_src_query);
   video_encoder_class->sink_event =
       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_sink_event);
-  /* FIXME propose_allocation or not ? */
+
+
   klass->handle_frame = GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_handle_frame);
 
   element_class->change_state =
