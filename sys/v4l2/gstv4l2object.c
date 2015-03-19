@@ -2883,10 +2883,8 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       streamparm.parm.capture.timeperframe.denominator;
   GST_VIDEO_INFO_FPS_D (&info) = streamparm.parm.capture.timeperframe.numerator;
 
-  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ||
-      v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE ||
-      v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT ||
-      v4l2object->type == V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE) {
+  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
+      || v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
     GST_DEBUG_OBJECT (v4l2object->element, "Got framerate: %u/%u",
         streamparm.parm.capture.timeperframe.denominator,
         streamparm.parm.capture.timeperframe.numerator);
